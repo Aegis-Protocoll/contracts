@@ -2,12 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
-import {AegisRiskScore} from "../src/AegisRiskScore.sol";
-import {MockDeFiProtocol} from "../src/MockDeFiProtocol.sol";
+import {AegisRiskScore} from "@/AegisRiskScore.sol";
+import {MockDeFiProtocol} from "@/MockDeFiProtocol.sol";
 
 contract Deploy is Script {
     function run() external {
-        uint256 deployerKey   = vm.envUint("PRIVATE_KEY");
+        uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address backendWallet = vm.envAddress("BACKEND_WALLET");
 
         vm.startBroadcast(deployerKey);
@@ -22,10 +22,5 @@ contract Deploy is Script {
         console.log("Backend authorized:", backendWallet);
 
         vm.stopBroadcast();
-
-        console.log("\n=== Copy these into README.md ===");
-        console.log("AegisRiskScore:", address(aegis));
-        console.log("MockDeFiProtocol:", address(defi));
-        console.log("Explorer: https://testnet-explorer.hsk.xyz/address/...");
     }
 }

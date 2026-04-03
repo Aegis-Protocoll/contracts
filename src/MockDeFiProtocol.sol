@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AegisGuard} from "./AegisGuard.sol";
+import {AegisGuard} from "@/AegisGuard.sol";
 
 /// @title MockDeFiProtocol
 /// @notice Demo protocol showing Aegis integration for the DeFi track.

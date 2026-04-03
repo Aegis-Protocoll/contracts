@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AegisRiskScore} from "./AegisRiskScore.sol";
+import {AegisRiskScore} from "@/AegisRiskScore.sol";
 
 /**
  * @title AegisGuard

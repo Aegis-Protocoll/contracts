@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {AegisRiskScore} from "../src/AegisRiskScore.sol";
-import {MockDeFiProtocol} from "../src/MockDeFiProtocol.sol";
-import {AegisGuard} from "../src/AegisGuard.sol";
+import {AegisRiskScore} from "@/AegisRiskScore.sol";
+import {MockDeFiProtocol} from "@/MockDeFiProtocol.sol";
+import {AegisGuard} from "@/AegisGuard.sol";
 
 contract AegisGuardTest is Test {
     AegisRiskScore aegis;
