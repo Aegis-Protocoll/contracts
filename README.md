@@ -1,66 +1,129 @@
-## Foundry
+# Aegis Protocol — Smart Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+> On-chain risk score storage and composable compliance enforcement for HashKey Chain.
 
-Foundry consists of:
+**Hackathon:** HashKey Chain Horizon 2026 | **Tracks:** AI + DeFi | **Chain:** HashKey Chain Testnet (133)
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+[Docs](https://aegisprotocol-1.gitbook.io/aegisprotocol) | [Landing](https://aegis-protocol-hsk.vercel.app) | [Demo](https://aegis-demo-hsk.vercel.app) | [API](https://aegis-api-hsk.vercel.app)
 
-## Documentation
+---
 
-https://paritytech.github.io/foundry-book-polkadot/
+## Problem
 
-## Usage
+DeFi protocols on HashKey Chain have no composable way to enforce wallet-level compliance. Existing solutions like Range provide off-chain APIs, but enforcement remains the protocol's responsibility — most skip it entirely.
 
-### Build
+## Solution
 
-```shell
-$ forge build
+Aegis writes AI-generated risk scores directly on-chain. Any DeFi protocol inherits `AegisGuard` and gets automatic enforcement in 2 lines of Solidity. No custom compliance logic needed.
+
+---
+
+## Deployed Contracts
+
+| Contract | Address | Explorer |
+|---|---|---|
+| AegisRiskScore | `0x4299b716F33Be7F43D0Ebf0c1F4863D3fC4b37ec` | [View](https://testnet-explorer.hsk.xyz/address/0x4299b716F33Be7F43D0Ebf0c1F4863D3fC4b37ec) |
+| MockDeFiProtocol | `0xE633d2bBb9D610A3dA777a651C1497257a159557` | [View](https://testnet-explorer.hsk.xyz/address/0xE633d2bBb9D610A3dA777a651C1497257a159557) |
+
+---
+
+## Architecture
+
+### AegisRiskScore.sol — Core Storage
+
+Stores per-wallet `RiskProfile` structs on-chain:
+
+```
+struct RiskProfile {
+    uint8 score;           // 1-10
+    RiskLevel level;       // VERY_LOW → CRITICAL
+    uint64 updatedAt;      // unix timestamp
+    bytes32[4] flags;      // behavioral flags (fixed array for gas)
+    string reasoning;      // AI-generated explanation
+    bool isCompliant;      // score <= 6
+    uint8 hopDistance;      // hops to nearest malicious address
+}
 ```
 
-### Test
+**Access control:**
+- `onlyOwner` — admin functions (authorize backends, manage clean list)
+- `onlyBackend` — write functions (only authorized backend wallets can update scores)
+- Public reads — any contract or EOA can query scores
 
-```shell
-$ forge test
+**Key design decisions:**
+- `bytes32[4]` fixed array instead of dynamic `string[]` for gas optimization
+- Known clean address override at contract level (score forced to 1)
+- Never-scored wallets default to compliant (permissive by default)
+
+### AegisGuard.sol — Composable Base
+
+Abstract contract that DeFi protocols inherit. Provides two enforcement modifiers:
+
+```solidity
+contract MyDEX is AegisGuard {
+    constructor() AegisGuard(AEGIS_ADDRESS) {}
+    function deposit() external payable onlyCompliant { ... }
+    function swap(uint256 amt) external onlyNotCritical { ... }
+}
 ```
 
-### Format
+| Modifier | Threshold | Use Case |
+|---|---|---|
+| `onlyCompliant` | Blocks score >= 7 | Deposits, lending, bridging |
+| `onlyNotCritical` | Blocks score = 10 | Swaps, lighter operations |
 
-```shell
-$ forge fmt
+This graduated enforcement mirrors real-world compliance — strict for capital inflows, softer for trading, no restriction on withdrawals.
+
+### MockDeFiProtocol.sol — Demo DEX
+
+Demonstrates both enforcement levels:
+- `deposit()` — strict (`onlyCompliant`), blocked at score >= 7
+- `swap()` — soft (`onlyNotCritical`), blocked only at score 10
+- `withdraw()` — no check, users can always exit their funds
+
+---
+
+## Enforcement Matrix
+
+| Score | Level | Compliant | `deposit()` | `swap()` | `withdraw()` |
+|---|---|---|---|---|---|
+| 10 | CRITICAL | No | Blocked | Blocked | Allowed |
+| 7-9 | HIGH | No | Blocked | Allowed | Allowed |
+| 4-6 | MEDIUM | Yes | Allowed | Allowed | Allowed |
+| 1-3 | LOW/VERY_LOW | Yes | Allowed | Allowed | Allowed |
+
+---
+
+## Tests
+
+```bash
+forge test -vvv
 ```
 
-### Gas Snapshots
+Test coverage:
+- Score update and level mapping across all 5 risk levels
+- Known clean address override (score 9 → forced to 1)
+- Never-scored wallet defaults to compliant
+- Unauthorized backend reverts
+- Clean wallet can deposit, risky wallet blocked
+- Risky wallet can swap (soft check), sanctioned wallet blocked
+- Score update unblocks previously blocked wallet
+- Anyone can withdraw regardless of score
 
-```shell
-$ forge snapshot
+---
+
+## Build & Deploy
+
+```bash
+forge install OpenZeppelin/openzeppelin-contracts
+forge build
+
+source .env
+forge script script/Deploy.s.sol \
+  --rpc-url $RPC_URL --private-key $PRIVATE_KEY \
+  --broadcast --chain-id 133 -vvvv
 ```
 
-### Anvil
+## Tech
 
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Solidity 0.8.20 | Foundry | OpenZeppelin Ownable | HashKey Chain (OP-Stack)
