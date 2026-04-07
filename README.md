@@ -4,7 +4,7 @@
 
 **Hackathon:** HashKey Chain Horizon 2026 | **Tracks:** AI + DeFi | **Chain:** HashKey Chain Testnet (133)
 
-[Docs](https://aegisprotocol-1.gitbook.io/aegisprotocol) | [Landing](https://aegis-protocol-hsk.vercel.app) | [Demo](https://aegis-demo-hsk.vercel.app) | [API](https://aegis-api-hsk.vercel.app)
+[Docs](https://aegisprotocol-1.gitbook.io/aegisprotocol) | [Landing](https://aegis-protocol-landing.vercel.app) | [Demo](https://aegis-protocol-demo.vercel.app) | [API](https://aegis-protocol-api.vercel.app)
 
 ---
 
