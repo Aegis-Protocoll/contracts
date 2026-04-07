@@ -38,7 +38,7 @@ struct RiskProfile {
     uint8 score;           // 1-10
     RiskLevel level;       // VERY_LOW → CRITICAL
     uint64 updatedAt;      // unix timestamp
-    bytes32[4] flags;      // behavioral flags (fixed array for gas)
+    string[] flags;        // behavioral flags (e.g. "mixer_exposure")
     string reasoning;      // AI-generated explanation
     bool isCompliant;      // score <= 6
     uint8 hopDistance;      // hops to nearest malicious address
